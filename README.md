@@ -11,6 +11,8 @@
 
 2. https://jamesgawley.github.io/Unsupervised-Lemmatization-Model/
 Построили модель оценки частоты слов, затем построили лемматизатор,возвращающий все возможные варианты леммы с их вероятностями в соответствии с ее частотой в модели.
+https://github.com/jamesgawley/cltk/blob/master/cltk/lemmatize/latin/unsupervised.py
+- для латинского языка
 
 3. Chakrabarty A., Choudhury S. R., Garain U. IndiLem@ FIRE-MET-2014: An unsupervised lemmatizer for Indian languages //Proceedings of Forum for Information Retrieval and Evaluation (FIRE 2014). – 2014.
 Используется посик по дереву с помощью словаря.
