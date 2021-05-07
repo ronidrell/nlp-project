@@ -12,6 +12,16 @@
 
 `pip install -r requirements.txt`
 
+## Обучение модели fasttext
+
+`git clone https://github.com/facebookresearch/fastText.git`
+
+`% cd fastText`
+
+`!make`
+
+`! ./fasttext cbow -input /content/drive/MyDrive/ddata/korpus3_isprav.txt -output /content/drive/MyDrive/nlp/model -epoch 10 -dim 100`
+
 ## Кластеризация
 
 Основной код: 
