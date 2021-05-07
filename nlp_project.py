@@ -304,9 +304,6 @@ def homogeneity(clustering, writeout=False):
     lemmatization_corrects = 0
     found_clusters = dict()  # caching
     lemma2clusters2forms = defaultdict(lambda: defaultdict(set))
-    if remerge:
-        for cluster in clusterset:
-            clusters_restemmed[get_stem(cluster, remerging=True)].append(cluster)
 
     f = open('3/good.txt', 'w', encoding='utf-8')
     for form, lemma in test_data:
