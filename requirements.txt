@@ -1,0 +1,4 @@
+fasttext
+pyjarowinkler
+unidecode
+sortedcollections
