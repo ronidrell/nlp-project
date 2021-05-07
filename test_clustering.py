@@ -1,16 +1,16 @@
 import pickle
-
-clustering = pickle.load(open("/content/drive/MyDrive/nlp/aggclust2.pickle", 'rb'))
-
 import fasttext
-
-embedding = fasttext.load_model("/content/drive/MyDrive/nlp/model.bin")
-
 from pyjarowinkler import distance
 from numpy import inner
 from numpy.linalg import norm
-
 import unidecode
+from collections import defaultdict
+import pandas as pd
+from sklearn.metrics import homogeneity_completeness_v_measure
+
+clustering = pickle.load(open("/content/drive/MyDrive/nlp/aggclust2.pickle", 'rb'))
+
+embedding = fasttext.load_model("/content/drive/MyDrive/nlp/model.bin")
 
 def devow(form):
     # implicit transliteration and deaccentization
@@ -77,7 +77,6 @@ def get_stem(form, remerging=False):
   stem = form[:int(remerge)]
   return stem
 
-from collections import defaultdict
 
 forms_stemmed = defaultdict(set)
 for i in range(len(embedding.words)):
@@ -99,16 +98,6 @@ def find_cluster_for_form(form, clustering):
           # else leave the default, i.e. a separate new cluster
     return cluster
 
-import pandas as pd
-
-test = pd.read_csv("/content/drive/MyDrive/nlp/test.csv")
-
-test_data = test['wordform'].values.tolist()
-
-test_data_clusters = dict()
-for form in test_data:
-  test_data_clusters[form] = find_cluster_for_form(form, clustering)
-
 def writeout_clusters(clustering):
     cluster2forms = defaultdict(list)
     for form, cluster in clustering.items():
@@ -118,5 +107,46 @@ def writeout_clusters(clustering):
         for form in cluster2forms[cluster]:
             print(form)
         print()
+ 
+def homogeneity(clustering):
+    golden = list()
+    predictions = list()
+    lemmatization_corrects = 0
+    found_clusters = dict()  # caching
+    lemma2clusters2forms = defaultdict(lambda: defaultdict(set))
 
-writeout_clusters(test_data_clusters)
+    for form, lemma in test_data:
+        golden.append(lemma)
+        if form in clustering:
+            cluster = clustering[form]
+        else:
+            if form not in found_clusters:
+                found_clusters[form] = find_cluster_for_form(form, clustering)
+            cluster = found_clusters[form]
+        if lemma in clustering:
+            lemmacluster = clustering[lemma]
+        else:
+            if lemma not in found_clusters:
+                found_clusters[lemma] = find_cluster_for_form(lemma, clustering)
+            lemmacluster = found_clusters[lemma]
+
+        predictions.append(cluster)
+        lemma2clusters2forms[lemma][cluster].add(form)
+        if cluster == lemmacluster:
+            lemmatization_corrects += 1
+
+    hcv = homogeneity_completeness_v_measure(golden, predictions)
+    acc = lemmatization_corrects/len(golden)
+    return (*hcv, acc)
+
+
+test = pd.read_csv("data/allforms.csv")
+
+test_data = list()
+for i in range(len(df['wordform'])):
+  test_data.append((df['wordform'][i], df['lemma'][i]))
+
+hcva = homogeneity(clustering)
+print('Homogeneity', 'completenss', 'vmeasure', 'accuracy', sep='\t')
+print(*hcva, sep='\t')
+
