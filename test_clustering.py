@@ -97,16 +97,6 @@ def find_cluster_for_form(form, clustering):
           cluster = clustering[nearest_form]
           # else leave the default, i.e. a separate new cluster
     return cluster
-
-def writeout_clusters(clustering):
-    cluster2forms = defaultdict(list)
-    for form, cluster in clustering.items():
-        cluster2forms[cluster].append(form)
-    for cluster in sorted(cluster2forms.keys()):
-        print('CLUSTER', cluster)
-        for form in cluster2forms[cluster]:
-            print(form)
-        print()
  
 def homogeneity(clustering):
     golden = list()
