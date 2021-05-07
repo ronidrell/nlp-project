@@ -4,5 +4,6 @@
 
 Код для тестовой кластеризации: test_clustering.py
 
+Используемые данные в папке data
 
 Rosa R., Žabokrtský Z. Unsupervised Lemmatization as Embeddings-Based Word Clustering //arXiv preprint arXiv:1908.08528. – 2019.
