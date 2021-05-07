@@ -18,9 +18,9 @@
 
 `% cd fastText`
 
-`!make`
+`make`
 
-`! ./fasttext cbow -input /content/drive/MyDrive/ddata/korpus3_isprav.txt -output /content/drive/MyDrive/nlp/model -epoch 10 -dim 100`
+`./fasttext cbow -input /content/drive/MyDrive/ddata/korpus3_isprav.txt -output /content/drive/MyDrive/nlp/model -epoch 10 -dim 100`
 
 ## Кластеризация
 
