@@ -68,7 +68,10 @@ def plot_dendrogram(model, **kwargs):
     plt.subplots_adjust(bottom=0.2)
 
 def devow(form):
-    # implicit transliteration and deaccentization
+    '''
+    Удаление не начальных гласных
+    Используется для вычисления расстояния между словами, делает меру мягче (уделяет меньше внимания различиям, которые имеют меньше влияния)
+    '''
     uform = unidecode.unidecode(form)
 
     # keep first letter
@@ -90,6 +93,7 @@ def devow(form):
     return uform[:1] + dform
 
 def embsim(word, otherword):
+    # сходство между эмбеддингами
     emb1 = embedding[word]
     emb2 = embedding[otherword]
     sim = inner(emb1, emb2) / (norm(emb1) * norm(emb2))
@@ -98,6 +102,7 @@ def embsim(word, otherword):
     return sim
 
 def jw_safe(srcword, tgtword):
+    # расстояние Джаро-винклера
     if srcword == '' or tgtword == '':
         # 1 if both empty
         # 0.5 if one is length 1
@@ -110,7 +115,7 @@ def jw_safe(srcword, tgtword):
         return distance.get_jaro_distance(srcword, tgtword)
 
 def jwsim(word, otherword):
-    # called distance but is actually similarity
+    # сходство Джаро-Винклера
     sim = jw_safe(word, otherword)
     uword = devow(word)
     uotherword = devow(otherword)
@@ -128,7 +133,7 @@ def lensim(word, otherword):
 def similarity(word, otherword, similarity):
     if similarity == 'jw':
         return jwsim(word, otherword)
-    elif similarity == 'jwxcos':
+    elif similarity == 'jwxcos': # расстояние, предложенное авторами в статье
         return jwsim(word, otherword) * embsim(word, otherword)
     elif similarity == 'jwxcosxlen':
         return jwsim(word, otherword) * embsim(word, otherword) * lensim(word, otherword);
@@ -141,21 +146,22 @@ def similarity(word, otherword, similarity):
 remerge = 2
 
 def get_stem(form, remerging=False):
+  # получаем стемму слова (в нашем случае первые 2 буквы)
   remerge = 2
   stem = form[:int(remerge)]
   return stem
 
 
 embedding = fasttext.load_model("model.bin")
-forms_stemmed = defaultdict(set)
-form_freq_rank = dict()
+forms_stemmed = defaultdict(set) # словарь стемма - словоформа
+form_freq_rank = dict() # частота 
 for i in range(len(embedding.words)):
   stem = get_stem(embedding.words[i])
   forms_stemmed[stem].add(embedding.words[i])
   form_freq_rank[embedding.words[i]] = i
 
 
-test_data = list()
+test_data = list() # список всех словоформ
 df = pd.read_csv("allforms.csv")
 
 for i in range(len(df['wordform'])):
@@ -165,9 +171,6 @@ for i in range(len(df['wordform'])):
 def get_dist(form1, form2, sim):
     # similarity to distance
     return 1-similarity(form1, form2, sim)
-
-def node2str(node, index2word):
-    return [index2word[index] for index in node]
 
 def linkage(cluster1, cluster2, D, measure):
     linkages = list()
