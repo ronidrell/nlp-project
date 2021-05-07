@@ -173,6 +173,7 @@ def get_dist(form1, form2, sim):
     return 1-similarity(form1, form2, sim)
 
 def linkage(cluster1, cluster2, D, measure):
+    # критерий связи
     linkages = list()
     for node1 in cluster1:
         for node2 in cluster2:
@@ -209,7 +210,7 @@ def aggclust(forms_stemmed, measure):
             result[index2word[0]] = cl(stem, 0)
             continue
 
-        D = np.empty((I, I))
+        D = np.empty((I, I)) # матрица расстояний
         for i1 in range(I):
             for i2 in range(I):
                 D[i1,i2] = get_dist(index2word[i1], index2word[i2], 'jwxcos')
@@ -234,6 +235,7 @@ def aggclust(forms_stemmed, measure):
     return result
 
 def writeout_clusters(clustering):
+    # запись кластеров в файл
     cluster2forms = defaultdict(list)
     for form, cluster in clustering.items():
         cluster2forms[cluster].append(form)
@@ -252,6 +254,7 @@ def writeout_clusters(clustering):
 clusterset = set()
 
 def rename_clusters(clustering):
+    # переименовывание кластеров
     cluster2forms = defaultdict(list)
     for form, cluster in clustering.items():
         cluster2forms[cluster].append(form)
@@ -281,6 +284,7 @@ def rename_clusters(clustering):
 # other option is nearest cluster in avg linkage
 # (probably similar result but not necesarily)
 def find_cluster_for_form(form, clustering, oov):
+    # поиск кластера для словоформы
     global threshold
     stem = get_stem(form)
     cluster = form  # backoff: new cluster
@@ -294,33 +298,7 @@ def find_cluster_for_form(form, clustering, oov):
             # else leave the default, i.e. a separate new cluster
     return cluster
 
-clusters_restemmed = defaultdict(list)
-cluster_remerged = dict()
-
-remergethreshold = 0.3
-
-def remerge(pivot_cluster):
-    global remergethreshold
-    merged_clusters = set()
-    merged_clusters.add(pivot_cluster)
-    stem = get_stem(pivot_cluster, remerging=True)
-    for candidate_cluster in clusters_restemmed[stem]:
-        # find all near clusters; just look at the representant words
-        if get_dist(pivot_cluster, candidate_cluster, 'jwxcos') < remergethreshold:
-            merged_clusters.add(candidate_cluster)
-    # find name for the new merghed cluster
-    form2rank = dict()
-    form2rank[pivot_cluster] = len(embedding.words)
-    for form in merged_clusters:
-        if form in form_freq_rank:
-            form2rank[form] = form_freq_rank[form]
-    merged_name = min(form2rank, key=form2rank.get)
-    # define the merge
-    print('MERGE:', merged_name, merged_clusters)
-    for cluster in merged_clusters:
-        cluster_remerged[cluster] = merged_name
-
-def homogeneity(clustering, writeout=False, remerge=False):
+def homogeneity(clustering, writeout=False):
     golden = list()
     predictions = list()
     lemmatization_corrects = 0
@@ -345,14 +323,6 @@ def homogeneity(clustering, writeout=False, remerge=False):
             if lemma not in found_clusters:
                 found_clusters[lemma] = find_cluster_for_form(lemma, clustering, 'guess')
             lemmacluster = found_clusters[lemma]
-
-        if remerge:
-            if cluster not in cluster_remerged:
-                remerge(cluster)
-            cluster = cluster_remerged[cluster]
-            if lemmacluster not in cluster_remerged:
-                remerge(lemmacluster)
-            lemmacluster = cluster_remerged[lemmacluster]
 
         predictions.append(cluster)
         lemma2clusters2forms[lemma][cluster].add(form)
@@ -423,11 +393,9 @@ clustering = aggclust(forms_stemmed, 'average')
 
 logging.info('Rename clusters')
 renamed_clustering = rename_clusters(clustering)
-logging.info('Write out train clusters')
-print('START TRAIN CLUSTERS')
+
 writeout_clusters(renamed_clustering)
-print('END TRAIN CLUSTERS')
-logging.info('Run evaluation')
+
 hcva = homogeneity(renamed_clustering, writeout=True)
 print('Homogeneity', 'completenss', 'vmeasure', 'accuracy', sep='\t')
 print(*hcva, sep='\t')
